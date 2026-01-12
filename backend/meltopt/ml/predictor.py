@@ -1,4 +1,4 @@
-"""ML Prediction Engine with Safety Constraints"""
+"""ML Prediction Engine for kg/ton Models"""
 
 import numpy as np
 import logging
@@ -11,13 +11,17 @@ logger = logging.getLogger(__name__)
 
 
 class MeltPredictor:
-    """Main prediction class for melt chemistry optimization"""
+    """Main prediction class for melt chemistry optimization
+    
+    IMPORTANT: Models predict kg/ton (kilograms per ton of melt).
+    This class converts to total kg using melt weight.
+    """
     
     def __init__(self):
         self.models = model_loader.get_all_models()
         self.model_configs = MODELS
         
-        # Auto-detect expected features from first model
+        # Log model expectations
         if self.models:
             first_model = next(iter(self.models.values()))
             if hasattr(first_model, 'n_features_in_'):
@@ -25,11 +29,12 @@ class MeltPredictor:
                 actual_features = len(CHEMISTRY_ELEMENTS)
                 
                 if expected_features != actual_features:
-                    logger.warning(
-                        f"Feature mismatch detected! Models expect {expected_features} features, "
-                        f"but CHEMISTRY_ELEMENTS has {actual_features}. "
-                        f"Please update config.py to match your training data."
+                    logger.error(
+                        f"FEATURE MISMATCH: Models expect {expected_features} features, "
+                        f"but config has {actual_features}. Update CHEMISTRY_ELEMENTS in config.py!"
                     )
+                else:
+                    logger.info(f"✓ Models configured correctly ({expected_features} features)")
     
     def compute_chemistry_delta(self, initial: Dict[str, float], target: Dict[str, float]) -> Dict[str, float]:
         """Compute the difference between target and initial chemistry"""
@@ -42,116 +47,165 @@ class MeltPredictor:
     
     def prepare_features(self, chemistry_delta: Dict[str, float]) -> np.ndarray:
         """Convert chemistry delta dict to feature array for ML models"""
-        # Assumes models were trained with these features in this order
         features = [chemistry_delta.get(elem, 0.0) for elem in CHEMISTRY_ELEMENTS]
         return np.array(features).reshape(1, -1)
     
-    def apply_safety_limits(self, prediction: float, model_name: str, is_step_recommendation: bool = False) -> Tuple[float, List[str]]:
-        """Apply safety constraints to predictions"""
-        warnings = []
-        config = self.model_configs[model_name]
-        
-        # Use step limit if this is a step recommendation
-        max_val = config['max_per_step'] if is_step_recommendation else config['max']
-        min_val = config['min']
-        warn_threshold = SAFETY_THRESHOLDS['warn_threshold'] * max_val
-        
-        # Check if prediction exceeds limits
-        if prediction < min_val:
-            warnings.append(f"{model_name}: Prediction {prediction:.2f} below minimum {min_val}")
-            prediction = min_val
-        
-        if prediction > max_val:
-            warnings.append(f"{model_name}: Prediction {prediction:.2f} exceeds maximum {max_val}, clamped")
-            prediction = max_val
-        
-        # Warning if approaching limits
-        if prediction > warn_threshold:
-            warnings.append(f"{model_name}: Approaching limit (recommend step-wise addition)")
-        
-        return prediction, warnings
+    def check_large_correction(self, delta: Dict[str, float], target: Dict[str, float]) -> bool:
+        """Check if chemistry correction is large (requires multiple steps)"""
+        for elem in CHEMISTRY_ELEMENTS:
+            target_val = target.get(elem, 0.0)
+            if target_val > 0:
+                relative_change = abs(delta[elem]) / target_val
+                if relative_change > STEP_STRATEGY['large_correction_threshold']:
+                    return True
+        return False
     
     def predict_alloy_additions(self, initial_chemistry: Dict[str, float], 
                                 target_chemistry: Dict[str, float],
-                                melt_weight: float = None) -> Dict:
-        """Main prediction method with melt weight scaling"""
+                                melt_weight_kg: float) -> Dict:
+        """Main prediction method
+        
+        Args:
+            initial_chemistry: Current melt chemistry (% for each element)
+            target_chemistry: Desired melt chemistry (% for each element)
+            melt_weight_kg: Melt size in kilograms
+            
+        Returns:
+            Structured response with step-wise recommendations
+        """
         try:
-            # Validate melt weight
-            if melt_weight is None:
-                melt_weight = SAFETY_THRESHOLDS['reference_melt_weight']
-                logger.warning(f"No melt weight provided, using reference: {melt_weight} kg")
-            
-            if melt_weight < SAFETY_THRESHOLDS['min_melt_weight']:
+            # ============================================================
+            # STEP 1: VALIDATE MELT WEIGHT
+            # ============================================================
+            if melt_weight_kg < SAFETY_THRESHOLDS['min_melt_weight_kg']:
                 return {
                     'status': 'error',
-                    'message': f'Melt weight too small: {melt_weight} kg (min: {SAFETY_THRESHOLDS["min_melt_weight"]} kg)',
+                    'message': f'Melt weight too small: {melt_weight_kg} kg (min: {SAFETY_THRESHOLDS["min_melt_weight_kg"]} kg)',
                 }
             
-            if melt_weight > SAFETY_THRESHOLDS['max_melt_weight']:
+            if melt_weight_kg > SAFETY_THRESHOLDS['max_melt_weight_kg']:
                 return {
                     'status': 'error',
-                    'message': f'Melt weight too large: {melt_weight} kg (max: {SAFETY_THRESHOLDS["max_melt_weight"]} kg)',
+                    'message': f'Melt weight too large: {melt_weight_kg} kg (max: {SAFETY_THRESHOLDS["max_melt_weight_kg"]} kg)',
                 }
             
-            # Step 1: Compute chemistry differences
+            # Convert to tons for calculations
+            melt_weight_tons = melt_weight_kg / 1000.0
+            
+            # ============================================================
+            # STEP 2: COMPUTE CHEMISTRY DELTAS
+            # ============================================================
             delta = self.compute_chemistry_delta(initial_chemistry, target_chemistry)
-            logger.info(f"Chemistry delta computed: {delta}")
+            logger.info(f"Chemistry delta: {delta}")
             
             # Check if correction is large
-            large_correction = any(
-                abs(delta[elem]) > STEP_STRATEGY['large_correction_threshold'] * target_chemistry.get(elem, 1.0)
-                for elem in CHEMISTRY_ELEMENTS
-            )
+            large_correction = self.check_large_correction(delta, target_chemistry)
             
-            # Step 2: Prepare features
+            # ============================================================
+            # STEP 3: PREPARE ML FEATURES
+            # ============================================================
             features = self.prepare_features(delta)
             
-            # Step 3: Run predictions for each alloy
+            # ============================================================
+            # STEP 4: RUN PREDICTIONS & CONVERT kg/ton → total kg
+            # ============================================================
             predictions = {}
             all_warnings = []
             
-            # Scale factor based on melt weight
-            weight_scale = melt_weight / SAFETY_THRESHOLDS['reference_melt_weight']
-            
             for model_name, model in self.models.items():
-                # Get raw prediction (for reference melt weight)
-                raw_prediction = model.predict(features)[0]
+                config = self.model_configs[model_name]
                 
-                # Scale by actual melt weight
-                scaled_prediction = raw_prediction * weight_scale
+                # Get prediction from model (kg/ton)
+                kg_per_ton = model.predict(features)[0]
                 
-                # Calculate step recommendation (safe incremental addition)
-                total_needed = scaled_prediction * STEP_STRATEGY['safety_factor']
-                step_recommendation, step_warnings = self.apply_safety_limits(
-                    total_needed, model_name, is_step_recommendation=True
-                )
+                # Ensure non-negative
+                kg_per_ton = max(0.0, kg_per_ton)
                 
-                # Estimate number of steps
-                estimated_steps = max(1, int(np.ceil(total_needed / step_recommendation)))
+                # Check if prediction exceeds reasonable bounds
+                if kg_per_ton > config['max_per_ton']:
+                    all_warnings.append(
+                        f"{model_name}: Model predicted {kg_per_ton:.2f} kg/ton, clamped to {config['max_per_ton']} kg/ton"
+                    )
+                    kg_per_ton = config['max_per_ton']
+                
+                # Convert to total kg needed
+                total_kg_raw = kg_per_ton * melt_weight_tons
+                
+                # Apply safety factor (conservative approach)
+                total_kg_needed = total_kg_raw * STEP_STRATEGY['safety_factor']
+                
+                # Determine step recommendation (safe incremental addition)
+                max_step = config['max_per_step_kg']
+                
+                if total_kg_needed <= STEP_STRATEGY['min_step_kg']:
+                    # Too small, skip
+                    step_recommendation = 0.0
+                    estimated_steps = 0
+                elif total_kg_needed <= max_step:
+                    # Can do in one step
+                    step_recommendation = total_kg_needed
+                    estimated_steps = 1
+                else:
+                    # Multiple steps required
+                    step_recommendation = max_step
+                    estimated_steps = int(np.ceil(total_kg_needed / max_step))
+                
+                # Warn if approaching step limit
+                if step_recommendation > config['max_per_step_kg'] * SAFETY_THRESHOLDS['warn_threshold_multiplier']:
+                    all_warnings.append(
+                        f"{model_name}: Large step size ({step_recommendation:.0f} kg) - proceed carefully"
+                    )
                 
                 predictions[model_name] = {
-                    'step_recommendation': float(step_recommendation),  # What operator should add NOW
-                    'total_estimated': float(total_needed),  # Total estimated for full correction
+                    'step_recommendation_kg': round(step_recommendation, 1),
+                    'total_estimated_kg': round(total_kg_needed, 1),
                     'estimated_steps': estimated_steps,
-                    'unit': 'kg',
-                    'max_per_step': self.model_configs[model_name]['max_per_step'],
+                    'kg_per_ton': round(kg_per_ton, 2),  # For operator reference
+                    'max_per_step_kg': config['max_per_step_kg'],
                 }
-                
-                all_warnings.extend(step_warnings)
+            
+            # ============================================================
+            # STEP 5: BUILD OPERATOR-FRIENDLY RESPONSE
+            # ============================================================
             
             # Add global warnings
             if large_correction:
-                all_warnings.insert(0, "⚠ Large chemistry correction detected - multiple steps recommended")
+                all_warnings.insert(0, "⚠️ Large chemistry correction - multiple steps recommended")
             
-            # Step 4: Build operator-friendly response
+            # Filter out zero recommendations for cleaner output
+            active_recommendations = {
+                k: v for k, v in predictions.items() 
+                if v['step_recommendation_kg'] > 0
+            }
+            
+            if not active_recommendations:
+                return {
+                    'status': 'success',
+                    'operator_instructions': {
+                        'message': 'No alloy additions needed',
+                        'next_action': 'Chemistry is within target range',
+                    },
+                    'chemistry_delta': delta,
+                    'melt_weight_kg': float(melt_weight_kg),
+                    'melt_weight_tons': round(melt_weight_tons, 2),
+                    'recommendations': predictions,
+                    'warnings': None,
+                    'metadata': {
+                        'models_used': list(self.models.keys()),
+                        'large_correction': large_correction,
+                        'safety_factor_applied': STEP_STRATEGY['safety_factor'],
+                    },
+                }
+            
             response = {
                 'status': 'success',
                 'operator_instructions': {
-                    'message': 'Recommended additions for STEP 1:',
-                    'next_action': 'Add alloys → Mix → Sample → Re-run system',
+                    'message': 'Recommended alloy additions for STEP 1:',
+                    'next_action': 'Add alloys → Mix (5-10 min) → Sample → Re-run system',
                 },
                 'chemistry_delta': delta,
-                'melt_weight_kg': float(melt_weight),
+                'melt_weight_kg': float(melt_weight_kg),
+                'melt_weight_tons': round(melt_weight_tons, 2),
                 'recommendations': predictions,
                 'warnings': all_warnings if all_warnings else None,
                 'metadata': {
@@ -161,12 +215,12 @@ class MeltPredictor:
                 },
             }
             
-            logger.info(f"Predictions generated successfully for {melt_weight} kg melt")
+            logger.info(f"Predictions generated for {melt_weight_kg} kg ({melt_weight_tons} ton) melt")
             return response
             
         except Exception as e:
             logger.error(f"Prediction failed: {str(e)}", exc_info=True)
             return {
                 'status': 'error',
-                'message': str(e),
+                'message': f'Prediction error: {str(e)}',
             }
