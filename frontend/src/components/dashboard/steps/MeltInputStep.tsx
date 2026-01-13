@@ -17,25 +17,62 @@ const placeholderInitial: Chemistry = { C: 0.35, Si: 0.25, Mn: 0.45, Cr: 0.15, N
 const placeholderTarget: Chemistry = { C: 0.40, Si: 0.35, Mn: 0.60, Cr: 0.25, Ni: 0.15 };
 
 export function MeltInputStep({ onSubmit, isLoading }: MeltInputStepProps) {
-  const [initialChemistry, setInitialChemistry] = useState<Chemistry>({ C: 0, Si: 0, Mn: 0, Cr: 0, Ni: 0 });
-  const [targetChemistry, setTargetChemistry] = useState<Chemistry>({ C: 0, Si: 0, Mn: 0, Cr: 0, Ni: 0 });
+  const [initialChemistry, setInitialChemistry] = useState<Partial<Chemistry>>({});
+  const [targetChemistry, setTargetChemistry] = useState<Partial<Chemistry>>({});
   const [meltWeight, setMeltWeight] = useState<number | ''>('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Fill in any missing fields with 0
+    const completeInitial: Chemistry = {
+      C: initialChemistry.C ?? 0,
+      Si: initialChemistry.Si ?? 0,
+      Mn: initialChemistry.Mn ?? 0,
+      Cr: initialChemistry.Cr ?? 0,
+      Ni: initialChemistry.Ni ?? 0,
+    };
+    const completeTarget: Chemistry = {
+      C: targetChemistry.C ?? 0,
+      Si: targetChemistry.Si ?? 0,
+      Mn: targetChemistry.Mn ?? 0,
+      Cr: targetChemistry.Cr ?? 0,
+      Ni: targetChemistry.Ni ?? 0,
+    };
     onSubmit({ 
-      initialChemistry, 
-      targetChemistry, 
+      initialChemistry: completeInitial, 
+      targetChemistry: completeTarget, 
       meltWeight: typeof meltWeight === 'number' ? meltWeight : 0 
     });
   };
 
   const updateInitial = (field: keyof Chemistry, value: string) => {
-    setInitialChemistry(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
+    if (value === '') {
+      setInitialChemistry(prev => {
+        const newState = { ...prev };
+        delete newState[field];
+        return newState;
+      });
+    } else {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue)) {
+        setInitialChemistry(prev => ({ ...prev, [field]: numValue }));
+      }
+    }
   };
 
   const updateTarget = (field: keyof Chemistry, value: string) => {
-    setTargetChemistry(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
+    if (value === '') {
+      setTargetChemistry(prev => {
+        const newState = { ...prev };
+        delete newState[field];
+        return newState;
+      });
+    } else {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue)) {
+        setTargetChemistry(prev => ({ ...prev, [field]: numValue }));
+      }
+    }
   };
 
   return (
@@ -72,7 +109,7 @@ export function MeltInputStep({ onSubmit, isLoading }: MeltInputStepProps) {
                         step="0.001"
                         min="0"
                         max="100"
-                        value={initialChemistry[field] || ''}
+                        value={initialChemistry[field] !== undefined ? initialChemistry[field] : ''}
                         onChange={(e) => updateInitial(field, e.target.value)}
                         placeholder={placeholderInitial[field].toString()}
                         className="text-base sm:text-lg font-mono h-10 sm:h-12"
@@ -100,7 +137,7 @@ export function MeltInputStep({ onSubmit, isLoading }: MeltInputStepProps) {
                         step="0.001"
                         min="0"
                         max="100"
-                        value={targetChemistry[field] || ''}
+                        value={targetChemistry[field] !== undefined ? targetChemistry[field] : ''}
                         onChange={(e) => updateTarget(field, e.target.value)}
                         placeholder={placeholderTarget[field].toString()}
                         className="text-base sm:text-lg font-mono h-10 sm:h-12"
