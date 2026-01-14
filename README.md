@@ -1,6 +1,12 @@
 # 🔥 MeltAssist
-
 **AI-Powered Foundry Melt Chemistry Optimization System**
+
+---
+
+## 🎥Demo Video
+https://github.com/user-attachments/assets/a464be40-200f-4d6d-9e76-1e9f95e444cd
+
+---
 
 MeltAssist is an intelligent decision support system for foundry operations that uses machine learning to optimize alloy additions and melt chemistry adjustments. The system provides step-by-step recommendations for achieving target chemistry specifications while maintaining safety thresholds and industry best practices.
 
