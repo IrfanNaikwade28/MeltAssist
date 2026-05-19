@@ -1,182 +1,323 @@
 # 🔥 MeltAssist
-**AI-Powered Foundry Melt Chemistry Optimization System**
+
+## Intelligent Foundry Melt Chemistry Optimization & Alloy Calculation System
 
 ---
 
-## 🎥Demo Video
+## 🎥 Demo Video
+
 https://github.com/user-attachments/assets/a464be40-200f-4d6d-9e76-1e9f95e444cd
 
 ---
 
-MeltAssist is an intelligent decision support system for foundry operations that uses machine learning to optimize alloy additions and melt chemistry adjustments. The system provides step-by-step recommendations for achieving target chemistry specifications while maintaining safety thresholds and industry best practices.
+## 📌 Overview
+
+MeltAssist is a full-stack industrial assistance platform designed for foundry operations.
+The system helps operators calculate required alloy additions based on current melt chemistry, target chemistry, and total melt weight.
+
+It simplifies manual calculations, reduces human error, and provides a structured workflow for melt chemistry correction and optimization.
 
 ---
 
-## ✨ Features
+# 📌 Problem Statement
 
-- **🎯 Chemistry Optimization**: ML-powered predictions for alloy additions based on initial and target chemistry
-- **📊 Multi-Step Workflow**: Guided foundry workflow with:
-  - Melt input and specification
-  - Chemistry analysis and delta calculation
-  - Alloy recommendation with kg/ton predictions
-  - Re-sampling and verification steps
-  - Step execution tracking
-- **🔬 Machine Learning Engine**: Trained models for predicting alloy additions (kg/ton)
-- **⚡ Real-time API**: RESTful backend with Django Rest Framework
-- **🎨 Modern UI**: React + TypeScript frontend with Tailwind CSS and shadcn/ui components
-- **🛡️ Safety Thresholds**: Built-in validation for melt weight and chemistry ranges
-- **📈 Large Correction Handling**: Automatic multi-step recommendations for significant chemistry changes
+In foundry industries, achieving the desired melt chemistry requires accurate alloy calculations and process control.
 
----
+Traditional manual calculations are:
 
-## 🏗️ Tech Stack
+* Time-consuming
+* Error-prone
+* Difficult for large melt weights
+* Hard to track consistently
 
-### Backend
-- **Framework**: Django 5.2+
-- **API**: Django Rest Framework
-- **ML/AI**: scikit-learn, NumPy, pandas, joblib
-- **Database**: SQLite (development)
-- **CORS**: django-cors-headers
+Operators must continuously:
 
-### Frontend
-- **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS
-- **UI Components**: shadcn/ui (Radix UI)
-- **State Management**: TanStack Query (React Query)
-- **Icons**: Lucide React
-- **Date Handling**: date-fns
+* Compare current and target chemistry
+* Calculate chemistry differences
+* Determine required alloy additions
+* Maintain process safety limits
+* Execute corrections step-by-step
+
+Incorrect calculations can lead to:
+
+* Material wastage
+* Rework and repeated corrections
+* Inconsistent melt quality
+* Increased production costs
+* Production delays
 
 ---
 
-## 📋 Prerequisites
+# 💡 Our Solution
+
+MeltAssist is an intelligent melt chemistry assistance system that automates alloy addition calculations and melt correction workflows.
+
+The platform:
+
+* Accepts current and target chemistry values
+* Calculates chemistry deltas automatically
+* Determines required alloy additions using industrial calculation formulas
+* Converts alloy requirements based on total melt weight
+* Provides step-by-step workflow guidance
+* Validates melt weight and chemistry ranges
+* Reduces manual effort and calculation mistakes
+
+The system combines industrial process logic with a modern web-based interface to improve operational efficiency in foundry environments.
+
+---
+
+# ✨ Features
+
+* 🎯 Automated Alloy Addition Calculations
+* 📊 Chemistry Delta Analysis
+* ⚙️ Melt Weight-Based Calculations
+* 🧮 Formula-Based Recommendation Engine
+* 📋 Multi-Step Foundry Workflow
+* 🔄 Re-Sampling & Verification Steps
+* 🛡️ Safety Validation Checks
+* 📈 Large Correction Handling
+* ⚡ RESTful Backend API
+* 🎨 Modern Responsive User Interface
+
+---
+
+# 🏗️ Tech Stack
+
+## Backend
+
+* **Framework**: Django 5.2+
+* **API**: Django REST Framework
+* **Libraries**: NumPy, pandas
+* **Database**: SQLite (development)
+* **CORS**: django-cors-headers
+
+## Frontend
+
+* **Framework**: React 18 with TypeScript
+* **Build Tool**: Vite
+* **Styling**: Tailwind CSS
+* **UI Components**: shadcn/ui (Radix UI)
+* **State Management**: TanStack Query (React Query)
+* **Icons**: Lucide React
+* **Date Handling**: date-fns
+
+---
+
+# 📋 Prerequisites
 
 Before you begin, ensure you have the following installed:
 
-- **Python**: 3.10 or higher
-- **Node.js**: 18.x or higher (or Bun runtime)
-- **pip**: Python package installer
-- **npm/bun**: Node package manager
+* **Python**: 3.10 or higher
+* **Node.js**: 18.x or higher
+* **pip**: Python package installer
+* **npm/bun**: Node package manager
 
 ---
 
-## 🚀 Installation
+# 🚀 Installation
 
-### 1. Clone the Repository
+## 1. Clone the Repository
 
 ```bash
 git clone <repository-url>
 cd MeltAssist
 ```
 
-### 2. Backend Setup
+---
+
+# ⚙️ Backend Setup
 
 ```bash
 # Navigate to backend directory
 cd backend
 
-# Create a virtual environment (recommended)
+# Create virtual environment
 python -m venv venv
+```
 
-# Activate virtual environment
-# On Windows:
+## Activate Virtual Environment
+
+### Windows
+
+```bash
 venv\Scripts\activate
-# On macOS/Linux:
+```
+
+### Linux/macOS
+
+```bash
 source venv/bin/activate
+```
 
-# Install dependencies
+## Install Dependencies
+
+```bash
 pip install -r requirements.txt
+```
 
-# Run migrations
+## Run Migrations
+
+```bash
 python manage.py migrate
+```
 
-# Create a superuser (optional, for admin access)
+## Create Superuser (Optional)
+
+```bash
 python manage.py createsuperuser
+```
 
-# Start the development server
+## Start Backend Server
+
+```bash
 python manage.py runserver
 ```
 
-The backend API will be available at `http://localhost:8000`
-
-### 3. Frontend Setup
+Backend will run at:
 
 ```bash
-# Navigate to frontend directory (from project root)
+http://localhost:8000
+```
+
+---
+
+# 🎨 Frontend Setup
+
+```bash
+# Navigate to frontend directory
 cd frontend
+```
 
-# Install dependencies
+## Install Dependencies
+
+```bash
 npm install
-# OR if using Bun:
-bun install
+```
 
-# Start the development server
+OR
+
+```bash
+bun install
+```
+
+## Start Frontend
+
+```bash
 npm run dev
-# OR if using Bun:
+```
+
+OR
+
+```bash
 bun run dev
 ```
 
-The frontend will be available at `http://localhost:5173`
+Frontend will run at:
+
+```bash
+http://localhost:5173
+```
 
 ---
 
-## 🎮 Usage
+# 🎮 Usage
 
-### Starting the Application
+## Starting the Application
 
-1. **Start Backend**:
-   ```bash
-   cd backend
-   python manage.py runserver
-   ```
+### Start Backend
 
-2. **Start Frontend** (in a new terminal):
-   ```bash
-   cd frontend
-   npm run dev
-   ```
+```bash
+cd backend
+python manage.py runserver
+```
 
-3. Open your browser and navigate to `http://localhost:5173`
+### Start Frontend
 
-### Workflow Steps
+```bash
+cd frontend
+npm run dev
+```
 
-1. **Melt Input**: Enter current melt chemistry, target chemistry, and melt weight (kg)
-2. **Chemistry Analysis**: Review the chemistry deltas and required adjustments
-3. **Alloy Recommendation**: Get ML-predicted alloy additions in kg
-4. **Re-Sampling**: Plan verification samples after additions
-5. **Step Execution**: Track execution of recommended steps
-6. **Completion**: Review results and finalize the melt
+Open your browser and navigate to:
+
+```bash
+http://localhost:5173
+```
 
 ---
 
-## 📡 API Endpoints
+# 🔄 Workflow Steps
 
-### Melt Optimization
+## 1. Melt Input
 
-**POST** `/api/optimize/`
+Enter:
 
-Predict alloy additions for melt chemistry optimization.
+* Initial melt chemistry
+* Target chemistry
+* Melt weight (kg)
 
-**Request Body**:
+## 2. Chemistry Analysis
+
+System calculates:
+
+* Chemistry differences (delta)
+* Required corrections
+
+## 3. Alloy Recommendation
+
+The recommendation engine calculates:
+
+* Required alloy additions
+* kg/ton conversion
+* Total alloy quantity
+
+## 4. Re-Sampling
+
+Operators can:
+
+* Verify updated chemistry
+* Perform additional correction steps if required
+
+## 5. Completion
+
+Finalize melt process and review output.
+
+---
+
+# 📡 API Endpoint
+
+## Melt Optimization
+
+### POST
+
+```http
+/api/optimize/
+```
+
+---
+
+## Request Body
+
 ```json
 {
   "initial_chemistry": {
     "C": 0.15,
     "Si": 0.25,
-    "Mn": 0.80,
-    ...
+    "Mn": 0.80
   },
   "target_chemistry": {
     "C": 0.18,
     "Si": 0.30,
-    "Mn": 1.00,
-    ...
+    "Mn": 1.00
   },
   "melt_weight_kg": 20000
 }
 ```
 
-**Response**:
+---
+
+## Response
+
 ```json
 {
   "status": "success",
@@ -184,10 +325,9 @@ Predict alloy additions for melt chemistry optimization.
   "data": {
     "alloy_additions_kg": {
       "FeSi75": 45.2,
-      "FeMn": 32.8,
-      ...
+      "FeMn": 32.8
     },
-    "steps": [...],
+    "steps": [],
     "requires_multiple_steps": false
   }
 }
@@ -195,155 +335,208 @@ Predict alloy additions for melt chemistry optimization.
 
 ---
 
-## 📁 Project Structure
+# 📁 Project Structure
 
-```
+```bash
 MeltAssist/
-├── backend/                 # Django backend
-│   ├── config/             # Django project configuration
-│   │   ├── settings.py     # Project settings
-│   │   ├── urls.py         # Main URL configuration
-│   │   └── wsgi.py         # WSGI configuration
-│   ├── meltopt/            # Main application
-│   │   ├── models.py       # Database models
-│   │   ├── views.py        # API views
-│   │   ├── urls.py         # App URL routes
-│   │   └── ml/             # Machine learning module
-│   │       ├── config.py   # ML configuration
-│   │       ├── loader.py   # Model loader
-│   │       └── predictor.py # Prediction engine
-│   ├── models/             # Trained ML models (joblib)
-│   ├── manage.py           # Django management script
-│   └── requirements.txt    # Python dependencies
+├── backend/
+│   ├── config/
+│   │   ├── settings.py
+│   │   ├── urls.py
+│   │   └── wsgi.py
+│   │
+│   ├── meltopt/
+│   │   ├── models.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   └── calculations/
+│   │
+│   ├── manage.py
+│   └── requirements.txt
 │
-├── frontend/               # React frontend
+├── frontend/
 │   ├── src/
-│   │   ├── components/    # React components
-│   │   │   ├── dashboard/ # Dashboard components
-│   │   │   └── ui/        # shadcn/ui components
-│   │   ├── hooks/         # Custom React hooks
-│   │   ├── services/      # API service layer
-│   │   ├── types/         # TypeScript type definitions
-│   │   └── pages/         # Page components
-│   ├── package.json       # Node dependencies
-│   └── vite.config.ts     # Vite configuration
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   ├── services/
+│   │   ├── types/
+│   │   └── pages/
+│   │
+│   ├── package.json
+│   └── vite.config.ts
 │
-└── README.md              # This file
+└── README.md
 ```
 
 ---
 
-## 🧪 Machine Learning Models
+# 🧮 Calculation & Recommendation Engine
 
-The system uses trained scikit-learn models that predict **kg/ton** (kilograms per ton of melt) for various alloy additions. The models are trained on historical foundry data and consider:
+The system uses industrial calculation formulas and chemistry difference analysis to determine alloy additions.
 
-- **Input Features**: Chemistry deltas (target - initial) for all elements
-- **Output**: Predicted alloy addition amounts in kg/ton
-- **Conversion**: Automatically converts to total kg using melt weight
+## Process Includes
 
-### Supported Elements
-C, Si, Mn, P, S, Cr, Ni, Mo, Cu, Al, Ti, V, Nb, N, and others
-
-### Safety Features
-- Minimum melt weight validation
-- Maximum melt weight validation
-- Large correction detection
-- Multi-step recommendation for significant changes
+* Chemistry delta calculation
+* Alloy percentage adjustment
+* Melt weight conversion
+* kg/ton calculations
+* Safety threshold validation
 
 ---
 
-## 🔧 Development
+# 🛡️ Safety Features
 
-### Backend Development
+* Minimum melt weight validation
+* Maximum melt weight validation
+* Large correction detection
+* Multi-step recommendation support
+* Input validation checks
+
+---
+
+# 🔧 Development
+
+## Backend Development
+
+### Run Tests
 
 ```bash
-# Run tests
 python manage.py test
-
-# Create new migrations
-python manage.py makemigrations
-
-# Apply migrations
-python manage.py migrate
-
-# Access Django admin
-# Navigate to http://localhost:8000/admin
 ```
 
-### Frontend Development
+### Create Migrations
 
 ```bash
-# Run linting
+python manage.py makemigrations
+```
+
+### Apply Migrations
+
+```bash
+python manage.py migrate
+```
+
+### Access Django Admin
+
+```bash
+http://localhost:8000/admin
+```
+
+---
+
+## Frontend Development
+
+### Run Lint
+
+```bash
 npm run lint
+```
 
-# Build for production
+### Production Build
+
+```bash
 npm run build
+```
 
-# Preview production build
+### Preview Production Build
+
+```bash
 npm run preview
 ```
 
 ---
 
-## 🐛 Known Issues
+# 🐛 Known Issues
 
-- Frontend shows 7 vulnerabilities (3 moderate, 4 high) - Run `npm audit fix` to address
-- SECRET_KEY in settings.py should be moved to environment variables for production
-- DEBUG mode is enabled - disable for production deployment
+* SQLite is used for development only
+* Production environment variables not configured
+* API authentication not implemented yet
+* Frontend dependency vulnerabilities may require:
 
----
-
-## 🚢 Production Deployment
-
-### Backend
-1. Set `DEBUG = False` in settings.py
-2. Configure proper SECRET_KEY from environment variable
-3. Update ALLOWED_HOSTS
-4. Use PostgreSQL or MySQL instead of SQLite
-5. Configure static files serving
-6. Set up HTTPS
-
-### Frontend
-1. Build production bundle: `npm run build`
-2. Serve the `dist/` directory using a web server (nginx, Apache, etc.)
-3. Configure proper API endpoint URLs
-4. Enable production optimizations
+```bash
+npm audit fix
+```
 
 ---
 
-## 🤝 Contributing
+# 🚢 Production Deployment
 
-Contributions are welcome! Please follow these steps:
+## Backend
+
+1. Set `DEBUG = False`
+2. Configure `SECRET_KEY` using environment variables
+3. Update `ALLOWED_HOSTS`
+4. Use PostgreSQL/MySQL instead of SQLite
+5. Configure static file serving
+6. Enable HTTPS
+
+## Frontend
+
+1. Build production bundle:
+
+```bash
+npm run build
+```
+
+2. Deploy `dist/` folder using:
+
+* Vercel
+* Netlify
+* Nginx
+* Apache
+
+3. Configure production API endpoints
+
+---
+
+# 🔮 Future Improvements
+
+* Historical melt data storage
+* Report generation
+* Authentication system
+* Export to Excel/PDF
+* Advanced analytics dashboard
+* Real-time monitoring
+* Cloud deployment support
+* Predictive optimization using ML models
+
+---
+
+# 🤝 Contributing
+
+Contributions are welcome.
+
+## Steps
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
+2. Create a feature branch
+3. Commit changes
+4. Push changes
 5. Open a Pull Request
 
 ---
 
-## 📝 License
+# 📝 License
 
-This project is proprietary software. All rights reserved.
+This project is proprietary software.
+All rights reserved.
 
 ---
 
-## 👥 Support
+# 👥 Support
 
 For issues, questions, or contributions, please contact the development team.
 
 ---
 
-## 🙏 Acknowledgments
+# 🙏 Acknowledgments
 
-- Built with Django and React
-- UI components from shadcn/ui
-- ML powered by scikit-learn
-- Icons from Lucide React
+* Built with Django and React
+* UI components from shadcn/ui
+* Icons from Lucide React
 
 ---
 
-**Made with ❤️ for foundry operations optimization**
+# ❤️ Made for Foundry Operations
 
-
+MeltAssist was developed to simplify melt chemistry calculations and improve process efficiency in industrial foundry environments.
